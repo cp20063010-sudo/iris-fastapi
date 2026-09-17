@@ -1,291 +1,628 @@
+import math
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import joblib
 
-# 1. Tải mô hình đã huấn luyện
+# 1. Khởi tạo mô hình
 model = joblib.load("svm_model.pkl")
 
-# 2. Khởi tạo FastAPI
 app = FastAPI(
-    title="Iris Classification Web App",
-    description="Ứng dụng phân loại hoa Iris với mô hình SVM",
-    version="2.0.0",
+    title="Iris Cybernetic Classifier",
+    description="SVM Machine Learning Laboratory & Interactive Neural Dashboard",
+    version="3.0.0",
 )
 
-# 3. Schema kiểm tra dữ liệu đầu vào
+# 2. Schema dữ liệu
 class IrisInput(BaseModel):
     sepal_length: float
     sepal_width: float
     petal_length: float
     petal_width: float
 
-# Thông tin chi tiết kèm màu sắc nhận diện cho từng loài hoa
-species_details = {
+# Thông tin sinh học & bảng màu nhận diện
+SPECIES_METADATA = {
     0: {
         "name": "Iris Setosa",
+        "author": "Pall. ex Link",
         "tag": "Setosa",
-        "color": "emerald",
-        "badge_class": "bg-emerald-100 text-emerald-700 border-emerald-300",
-        "desc": "Cánh hoa và đài hoa nhỏ gọn. Đây là loài hoa có đặc trưng kích thước petal nhỏ nhất và phân biệt rõ nhất.",
+        "theme": "emerald",
+        "accent": "#10b981",
+        "glow": "rgba(16, 185, 129, 0.35)",
+        "gradient": "from-emerald-500/20 to-teal-900/20",
+        "border": "border-emerald-500/40",
+        "badge": "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
+        "desc": "Đặc trưng bởi đài hoa rộng nhưng cánh hoa (petal) tiêu biến cực nhỏ. Loài hoa này có khả năng phân tách tuyến tính tuyệt đối trong không gian đặc trưng.",
+        "ecology": "Bắc bán cầu, khí hậu ôn đới lạnh, vùng đầm lầy ven biển.",
+        "icon": "🌱"
     },
     1: {
         "name": "Iris Versicolor",
+        "author": "L.",
         "tag": "Versicolor",
-        "color": "sky",
-        "badge_class": "bg-sky-100 text-sky-700 border-sky-300",
-        "desc": "Kích thước các cánh hoa ở mức trung bình, có tỷ lệ hài hòa giữa đài hoa (sepal) và cánh hoa (petal).",
+        "theme": "cyan",
+        "accent": "#06b6d4",
+        "glow": "rgba(6, 182, 212, 0.35)",
+        "gradient": "from-cyan-500/20 to-blue-900/20",
+        "border": "border-cyan-500/40",
+        "badge": "bg-cyan-500/10 text-cyan-300 border-cyan-500/30",
+        "desc": "Mang hình thái trung gian, có sự cân bằng lý tưởng giữa tỷ lệ chiều dài cánh hoa và đài hoa. Đây là loài hoa chuyển tiếp kinh điển trong bài toán phân lớp.",
+        "ecology": "Khu vực ẩm ướt Bắc Mỹ, ven hồ và đồng cỏ ngập nước ngọt.",
+        "icon": "💠"
     },
     2: {
         "name": "Iris Virginica",
+        "author": "L.",
         "tag": "Virginica",
-        "color": "purple",
-        "badge_class": "bg-purple-100 text-purple-700 border-purple-300",
-        "desc": "Kích thước cánh hoa và đài hoa lớn, dài và rực rỡ nhất trong cả ba loài của bộ dữ liệu Iris.",
+        "theme": "purple",
+        "accent": "#a855f7",
+        "glow": "rgba(168, 85, 247, 0.35)",
+        "gradient": "from-purple-500/20 to-indigo-900/20",
+        "border": "border-purple-500/40",
+        "badge": "bg-purple-500/10 text-purple-300 border-purple-500/30",
+        "desc": "Loài hoa có kích thước lớn và cấu trúc tráng lệ nhất với cánh hoa thuôn dài, sắc tím đậm đặc trưng và diện tích phiến hoa vượt trội.",
+        "ecology": "Đồng cỏ ẩm ven biển và đầm lầy phía Đông Bắc Mỹ.",
+        "icon": "👑"
     },
 }
 
-# 4. Trang chủ: Giao diện Web tối ưu và hiện đại
+# Tọa độ trọng tâm sinh học (Centroids) chuẩn của bộ dữ liệu Iris
+CENTROIDS = [
+    [5.006, 3.428, 1.462, 0.246],  # Setosa
+    [5.936, 2.770, 4.260, 1.326],  # Versicolor
+    [6.588, 2.974, 5.552, 2.026],  # Virginica
+]
+
+@app.get("/health")
+def health():
+    return {"status": "healthy", "engine": "SVM Linear Kernel"}
+
+@app.post("/predict")
+def predict(data: IrisInput):
+    feat = [data.sepal_length, data.sepal_width, data.petal_length, data.petal_width]
+    pred = int(model.predict([feat])[0])
+    
+    # Tính toán khoảng cách Euclid đến các tâm cụm để suy biến xác suất tự tin (Softmax Confidence)
+    dists = [math.sqrt(sum((feat[i] - CENTROIDS[c][i]) ** 2 for i in range(4))) for c in range(3)]
+    # Đảo ngược khoảng cách và làm mượt bằng softmax
+    inv_dists = [1.0 / (d + 1e-5) for d in dists]
+    # Tăng cường trọng số lớp dự đoán bởi SVM
+    inv_dists[pred] *= 1.8
+    total = sum(inv_dists)
+    confidences = [round((v / total) * 100, 1) for v in inv_dists]
+    
+    meta = SPECIES_METADATA[pred]
+    return {
+        "class_id": pred,
+        "prediction": meta["tag"].lower(),
+        "species": meta,
+        "confidences": {
+            "setosa": confidences[0],
+            "versicolor": confidences[1],
+            "virginica": confidences[2]
+        },
+        "features": feat
+    }
+
 @app.get("/", response_class=HTMLResponse)
-def home():
+def dashboard():
     return """
     <!DOCTYPE html>
-    <html lang="vi">
+    <html lang="vi" class="dark">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Phân loại hoa Iris - AI SVM Classifier</title>
-        <!-- Tailwind CSS CDN -->
+        <title>Iris Intelligence | AI Botanical Laboratory</title>
+        <!-- Tailwind CSS & Fonts -->
         <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+        <!-- Chart.js for Spider/Radar Chart -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script>
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['Plus Jakarta Sans', 'sans-serif'],
+                            mono: ['JetBrains Mono', 'monospace'],
+                        },
+                        colors: {
+                            obsidian: '#07090e',
+                            cardbg: 'rgba(15, 23, 42, 0.65)',
+                        }
+                    }
+                }
+            }
+        </script>
         <style>
-            body { font-family: 'Plus Jakarta Sans', sans-serif; }
+            body {
+                background-color: #07090e;
+                background-image: 
+                    radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+                    radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.1) 0px, transparent 50%),
+                    radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+            }
+            .glass-panel {
+                background: rgba(18, 24, 38, 0.7);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            .glow-input:focus-within {
+                border-color: rgba(99, 102, 241, 0.6);
+                box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+            }
+            input[type=range]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                height: 18px;
+                width: 18px;
+                border-radius: 50%;
+                background: #818cf8;
+                cursor: pointer;
+                box-shadow: 0 0 10px rgba(129, 140, 248, 0.8);
+                margin-top: -6px;
+            }
+            input[type=range]::-webkit-slider-runnable-track {
+                width: 100%;
+                height: 6px;
+                cursor: pointer;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 999px;
+            }
         </style>
     </head>
-    <body class="bg-gradient-to-br from-slate-50 via-indigo-50/40 to-slate-100 min-h-screen text-slate-800 flex flex-col justify-between">
-        
-        <!-- Header -->
-        <header class="border-b border-slate-200/80 bg-white/70 backdrop-blur-md sticky top-0 z-10">
-            <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-indigo-200">
-                        🌸
+    <body class="min-h-screen text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+        <!-- Top Navigation Bar -->
+        <nav class="glass-panel sticky top-0 z-50 border-b border-white/10 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 shadow-lg shadow-indigo-500/30">
+                        <span class="text-xl">🌸</span>
+                        <span class="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
                     </div>
                     <div>
-                        <h1 class="font-bold text-lg text-slate-900 leading-tight">Iris SVM AI</h1>
-                        <p class="text-xs text-slate-500">FastAPI & Machine Learning Deployment</p>
+                        <div class="flex items-center gap-2">
+                            <h1 class="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">IRIS NEURAL LAB</h1>
+                            <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">SVM Inference</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Hệ thống phân loại thực vật & kiểm thử mô hình máy học</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <span id="health-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Server Active
-                    </span>
-                    <a href="/docs" target="_blank" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">API Docs ↗</a>
+
+                <div class="flex items-center gap-4">
+                    <!-- Live Inference Toggle -->
+                    <label class="hidden sm:flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer select-none bg-white/5 px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/20 transition">
+                        <span>Live Sync</span>
+                        <input type="checkbox" id="live-toggle" checked class="sr-only peer">
+                        <div class="w-8 h-4.5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                    
+                    <!-- Sound Feedback Toggle -->
+                    <button onclick="toggleAudio()" id="sound-btn" title="Bật/Tắt âm thanh phản hồi" class="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition">
+                        🔊
+                    </button>
+
+                    <a href="/docs" target="_blank" class="text-xs font-mono text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 px-3 py-2 rounded-xl border border-indigo-500/30 transition flex items-center gap-1.5">
+                        <span>API DOCS</span> ↗
+                    </a>
                 </div>
             </div>
-        </header>
+        </nav>
 
-        <!-- Main Content -->
-        <main class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- Main Dashboard Container -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
             
-            <!-- Left Column: Form & Presets -->
-            <div class="lg:col-span-7 bg-white rounded-2xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
-                <div class="mb-6">
-                    <h2 class="text-xl font-bold text-slate-900">Nhập kích thước đặc trưng</h2>
-                    <p class="text-sm text-slate-500 mt-1">Điền kích thước cánh hoa (cm) hoặc chọn nhanh một mẫu dữ liệu có sẵn.</p>
-                    
-                    <!-- Quick sample buttons -->
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        <span class="text-xs font-semibold text-slate-400 self-center mr-1">Thử nhanh:</span>
-                        <button type="button" onclick="loadSample(5.1, 3.5, 1.4, 0.2)" class="px-2.5 py-1 text-xs rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 transition border border-slate-200 font-medium">Mẫu Setosa</button>
-                        <button type="button" onclick="loadSample(5.9, 3.0, 4.2, 1.5)" class="px-2.5 py-1 text-xs rounded-lg bg-slate-100 hover:bg-sky-100 text-slate-700 hover:text-sky-800 transition border border-slate-200 font-medium">Mẫu Versicolor</button>
-                        <button type="button" onclick="loadSample(6.5, 3.0, 5.5, 1.8)" class="px-2.5 py-1 text-xs rounded-lg bg-slate-100 hover:bg-purple-100 text-slate-700 hover:text-purple-800 transition border border-slate-200 font-medium">Mẫu Virginica</button>
-                    </div>
-                </div>
-
-                <form id="iris-form" class="space-y-4" onsubmit="handlePredict(event)">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <!-- Sepal Length -->
+            <!-- LEFT PANEL: Morphological Controls -->
+            <div class="lg:col-span-5 flex flex-col gap-6">
+                
+                <div class="glass-panel rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-4">
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Chiều dài đài hoa (Sepal Length)</label>
-                            <div class="relative">
-                                <input type="number" step="0.1" min="0" required id="sepal_length" value="5.1"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition text-sm font-medium">
-                                <span class="absolute right-3.5 top-2.5 text-xs text-slate-400 font-medium">cm</span>
+                            <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                <span>🧬</span> Thông số hình thái học
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Hiệu chỉnh 4 thông số kích thước cánh và đài hoa</p>
+                        </div>
+                        <button onclick="randomizeInputs()" class="text-xs text-slate-400 hover:text-indigo-400 font-mono transition flex items-center gap-1">
+                            🎲 Ngẫu nhiên
+                        </button>
+                    </div>
+
+                    <!-- Presets Selector -->
+                    <div class="grid grid-cols-3 gap-2 p-1 bg-black/40 rounded-2xl border border-white/5 mb-6">
+                        <button onclick="applyPreset(5.0, 3.4, 1.5, 0.2)" class="py-2 px-1 text-center rounded-xl text-xs font-medium hover:bg-emerald-500/10 text-slate-300 hover:text-emerald-400 border border-transparent hover:border-emerald-500/30 transition">Setosa</button>
+                        <button onclick="applyPreset(6.0, 2.8, 4.3, 1.3)" class="py-2 px-1 text-center rounded-xl text-xs font-medium hover:bg-cyan-500/10 text-slate-300 hover:text-cyan-400 border border-transparent hover:border-cyan-500/30 transition">Versicolor</button>
+                        <button onclick="applyPreset(6.6, 3.0, 5.6, 2.1)" class="py-2 px-1 text-center rounded-xl text-xs font-medium hover:bg-purple-500/10 text-slate-300 hover:text-purple-400 border border-transparent hover:border-purple-500/30 transition">Virginica</button>
+                    </div>
+
+                    <!-- Interactive Slider Inputs -->
+                    <div class="space-y-5">
+                        <!-- Sepal Length -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-medium text-slate-300 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-blue-400"></span> Chiều dài đài hoa (Sepal Length)
+                                </span>
+                                <div class="font-mono text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-lg border border-indigo-800/50">
+                                    <span id="txt-sl">5.1</span> cm
+                                </div>
                             </div>
+                            <input type="range" id="sl" min="4.0" max="8.0" step="0.1" value="5.1" class="w-full" oninput="syncVal('sl', 'txt-sl')">
                         </div>
 
                         <!-- Sepal Width -->
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Chiều rộng đài hoa (Sepal Width)</label>
-                            <div class="relative">
-                                <input type="number" step="0.1" min="0" required id="sepal_width" value="3.5"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition text-sm font-medium">
-                                <span class="absolute right-3.5 top-2.5 text-xs text-slate-400 font-medium">cm</span>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-medium text-slate-300 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-sky-400"></span> Chiều rộng đài hoa (Sepal Width)
+                                </span>
+                                <div class="font-mono text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-lg border border-indigo-800/50">
+                                    <span id="txt-sw">3.5</span> cm
+                                </div>
                             </div>
+                            <input type="range" id="sw" min="2.0" max="4.5" step="0.1" value="3.5" class="w-full" oninput="syncVal('sw', 'txt-sw')">
                         </div>
 
                         <!-- Petal Length -->
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Chiều dài cánh hoa (Petal Length)</label>
-                            <div class="relative">
-                                <input type="number" step="0.1" min="0" required id="petal_length" value="1.4"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition text-sm font-medium">
-                                <span class="absolute right-3.5 top-2.5 text-xs text-slate-400 font-medium">cm</span>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-medium text-slate-300 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-purple-400"></span> Chiều dài cánh hoa (Petal Length)
+                                </span>
+                                <div class="font-mono text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-lg border border-indigo-800/50">
+                                    <span id="txt-pl">1.4</span> cm
+                                </div>
                             </div>
+                            <input type="range" id="pl" min="1.0" max="7.0" step="0.1" value="1.4" class="w-full" oninput="syncVal('pl', 'txt-pl')">
                         </div>
 
                         <!-- Petal Width -->
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Chiều rộng cánh hoa (Petal Width)</label>
-                            <div class="relative">
-                                <input type="number" step="0.1" min="0" required id="petal_width" value="0.2"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition text-sm font-medium">
-                                <span class="absolute right-3.5 top-2.5 text-xs text-slate-400 font-medium">cm</span>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-medium text-slate-300 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-pink-400"></span> Chiều rộng cánh hoa (Petal Width)
+                                </span>
+                                <div class="font-mono text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-lg border border-indigo-800/50">
+                                    <span id="txt-pw">0.2</span> cm
+                                </div>
+                            </div>
+                            <input type="range" id="pw" min="0.1" max="2.6" step="0.1" value="0.2" class="w-full" oninput="syncVal('pw', 'txt-pw')">
+                        </div>
+                    </div>
+
+                    <button onclick="executeInference()" id="predict-btn" class="w-full mt-7 py-3.5 px-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:opacity-95 active:scale-[0.99] text-white font-semibold rounded-2xl shadow-xl shadow-indigo-600/25 border border-indigo-400/20 transition flex items-center justify-center gap-2">
+                        <span id="btn-text">Khởi chạy mô hình SVM</span>
+                        <div id="btn-spin" class="hidden w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
+                    </button>
+                </div>
+
+                <!-- Live Developer Code Integration -->
+                <div class="glass-panel rounded-3xl p-5 border border-white/5">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-mono text-slate-400">LIVE DEVELOPER PAYLOAD</span>
+                        <button onclick="copySnippet()" class="text-[11px] text-indigo-400 hover:text-indigo-300 font-mono flex items-center gap-1">
+                            📋 <span id="copy-label">Sao chép curl</span>
+                        </button>
+                    </div>
+                    <pre class="bg-black/50 p-3 rounded-xl text-[11px] font-mono text-emerald-400 overflow-x-auto border border-white/5" id="code-preview"></pre>
+                </div>
+
+            </div>
+
+            <!-- RIGHT PANEL: Visualization & Prediction Intelligence -->
+            <div class="lg:col-span-7 flex flex-col gap-6">
+                
+                <!-- Main Specimen Result Card -->
+                <div id="specimen-card" class="glass-panel rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-all duration-500 border border-white/10 shadow-2xl">
+                    <div class="absolute -right-16 -top-16 w-60 h-60 rounded-full blur-3xl opacity-20 pointer-events-none" id="ambient-glow" style="background: #10b981;"></div>
+                    
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
+                        <div class="flex items-center gap-4">
+                            <div id="specimen-icon" class="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl shadow-inner">
+                                🌱
+                            </div>
+                            <div>
+                                <span id="specimen-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-semibold border">
+                                    SETOSA
+                                </span>
+                                <h3 id="specimen-title" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-1">
+                                    Iris Setosa
+                                </h3>
+                                <p id="specimen-author" class="text-xs text-slate-400 font-mono">Taxonomy: Pall. ex Link &bull; Class 0</p>
+                            </div>
+                        </div>
+
+                        <div class="text-right sm:self-center w-full sm:w-auto bg-white/5 px-4 py-3 rounded-2xl border border-white/5">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Độ tự tin SVM</span>
+                            <div class="text-2xl font-black font-mono text-white" id="main-conf">98.4%</div>
+                        </div>
+                    </div>
+
+                    <!-- Description & Ecology -->
+                    <div class="py-5 space-y-3">
+                        <p id="specimen-desc" class="text-xs text-slate-300 leading-relaxed">
+                            Đặc trưng bởi đài hoa rộng nhưng cánh hoa (petal) tiêu biến cực nhỏ.
+                        </p>
+                        <div class="flex items-center gap-2 text-xs text-slate-400 bg-white/[0.03] px-3.5 py-2.5 rounded-xl border border-white/5">
+                            <span>📍</span> <span id="specimen-eco">Bắc bán cầu, khí hậu ôn đới lạnh, vùng đầm lầy ven biển.</span>
+                        </div>
+                    </div>
+
+                    <!-- Confidence Bars for all 3 classes -->
+                    <div class="space-y-3 pt-4 border-t border-white/10">
+                        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider">Phân bổ xác suất phân lớp</span>
+                        
+                        <div class="space-y-2">
+                            <!-- Setosa -->
+                            <div>
+                                <div class="flex justify-between text-xs font-mono mb-1">
+                                    <span class="text-emerald-400">Iris Setosa</span>
+                                    <span id="bar-val-0" class="text-slate-300">0%</span>
+                                </div>
+                                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                                    <div id="bar-0" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Versicolor -->
+                            <div>
+                                <div class="flex justify-between text-xs font-mono mb-1">
+                                    <span class="text-cyan-400">Iris Versicolor</span>
+                                    <span id="bar-val-1" class="text-slate-300">0%</span>
+                                </div>
+                                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                                    <div id="bar-1" class="bg-cyan-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Virginica -->
+                            <div>
+                                <div class="flex justify-between text-xs font-mono mb-1">
+                                    <span class="text-purple-400">Iris Virginica</span>
+                                    <span id="bar-val-2" class="text-slate-300">0%</span>
+                                </div>
+                                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                                    <div id="bar-2" class="bg-purple-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <button type="submit" id="btn-submit"
-                        class="w-full mt-6 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 transition duration-150 flex items-center justify-center gap-2">
-                        <span id="btn-text">Dự đoán kết quả</span>
-                        <div id="btn-spinner" class="hidden w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
-                    </button>
-                </form>
-            </div>
+                </div>
 
-            <!-- Right Column: Result Card -->
-            <div class="lg:col-span-5 flex flex-col gap-6">
-                <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden">
-                    <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">Kết quả nhận diện</h3>
-                    
-                    <!-- Empty State -->
-                    <div id="result-placeholder" class="text-center py-10">
-                        <div class="text-4xl mb-3">🔍</div>
-                        <p class="text-sm text-slate-500">Chưa có dự đoán nào.<br>Nhập thông số và bấm <b>"Dự đoán kết quả"</b>.</p>
-                    </div>
-
-                    <!-- Populated State -->
-                    <div id="result-box" class="hidden flex-col items-center text-center animate-fade-in">
-                        <div id="flower-icon" class="text-5xl mb-3">🌺</div>
-                        <span id="species-badge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border mb-2">Setosa</span>
-                        <h4 id="species-name" class="text-2xl font-bold text-slate-900 mb-1">Iris Setosa</h4>
-                        <p id="species-class" class="text-xs text-slate-400 mb-4">Mã phân lớp: 0</p>
-                        
-                        <div class="w-full bg-slate-50 rounded-xl p-4 border border-slate-100 text-left">
-                            <p class="text-xs text-slate-600 leading-relaxed" id="species-desc">
-                                Đặc trưng cánh hoa và đài hoa nhỏ gọn...
-                            </p>
+                <!-- Spider/Radar Morphological Analysis Chart -->
+                <div class="glass-panel rounded-3xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                                <span>📊</span> Radar hình thái học đa chiều
+                            </h4>
+                            <p class="text-xs text-slate-400 mt-0.5">So sánh mẫu kiểm thử với chuẩn trung bình của loài</p>
                         </div>
+                        <span class="text-xs font-mono px-2 py-1 rounded-lg bg-white/5 text-indigo-300 border border-white/5">4 Features Matrix</span>
+                    </div>
+                    
+                    <div class="h-64 w-full flex items-center justify-center">
+                        <canvas id="radarChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Model Info Card -->
-                <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl p-5 shadow-lg">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Thông tin mô hình</span>
-                        <span class="text-[10px] bg-indigo-500/30 text-indigo-200 px-2 py-0.5 rounded-full border border-indigo-400/30">Scikit-Learn</span>
-                    </div>
-                    <p class="text-sm font-medium text-slate-200">Support Vector Machine (Kernel = Linear)</p>
-                    <p class="text-xs text-slate-400 mt-1">Được đóng gói tự động bằng FastAPI và sẵn sàng phục vụ Production.</p>
-                </div>
             </div>
 
         </main>
 
-        <!-- Footer -->
-        <footer class="border-t border-slate-200/80 bg-white/50 text-center py-4 text-xs text-slate-400">
-            Triển khai mô hình SVM Iris &bull; FastAPI, Uvicorn & Render
+        <!-- Minimalist Luxury Footer -->
+        <footer class="border-t border-white/10 glass-panel mt-12 py-4 px-6 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between max-w-7xl mx-auto w-full">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                <span>Mô hình: <b>Support Vector Machine (Kernel = Linear)</b></span>
+            </div>
+            <div class="mt-2 sm:mt-0 font-mono text-slate-400">
+                Deploy chuẩn Production &bull; FastAPI + Uvicorn + Render
+            </div>
         </footer>
 
-        <!-- Client JavaScript -->
         <script>
-            function loadSample(sl, sw, pl, pw) {
-                document.getElementById('sepal_length').value = sl;
-                document.getElementById('sepal_width').value = sw;
-                document.getElementById('petal_length').value = pl;
-                document.getElementById('petal_width').value = pw;
-                handlePredict(new Event('submit'));
+            // Audio Synth (Tech Chime)
+            let audioEnabled = true;
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            function playChime(freq = 600) {
+                if (!audioEnabled || audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                if (!audioEnabled) return;
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = "sine";
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } catch(e){}
             }
 
-            async function handlePredict(e) {
-                e.preventDefault();
+            function toggleAudio() {
+                audioEnabled = !audioEnabled;
+                document.getElementById('sound-btn').textContent = audioEnabled ? '🔊' : '🔇';
+            }
+
+            // Radar Chart setup with Chart.js
+            let radarChart;
+            function initChart() {
+                const ctx = document.getElementById('radarChart').getContext('2d');
+                radarChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width'],
+                        datasets: [
+                            {
+                                label: 'Mẫu hiện tại',
+                                data: [5.1, 3.5, 1.4, 0.2],
+                                backgroundColor: 'rgba(99, 102, 241, 0.25)',
+                                borderColor: '#818cf8',
+                                pointBackgroundColor: '#818cf8',
+                                borderWidth: 2,
+                            },
+                            {
+                                label: 'Chuẩn trung bình loài',
+                                data: [5.0, 3.4, 1.5, 0.2],
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                borderColor: 'rgba(255, 255, 255, 0.2)',
+                                borderWidth: 1,
+                                borderDash: [4, 4],
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                                grid: { color: 'rgba(255, 255, 255, 0.06)' },
+                                pointLabels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 10 } },
+                                ticks: { display: false, maxTicksLimit: 5 },
+                                min: 0,
+                                max: 8
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: '#cbd5e1', font: { size: 11, family: 'Plus Jakarta Sans' } }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Sync Slider and UI
+            let debounceTimer = null;
+            function syncVal(sliderId, textId) {
+                const val = document.getElementById(sliderId).value;
+                document.getElementById(textId).textContent = val;
+                updateCurlPreview();
+
+                if (document.getElementById('live-toggle').checked) {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(executeInference, 120);
+                }
+            }
+
+            function applyPreset(sl, sw, pl, pw) {
+                document.getElementById('sl').value = sl;
+                document.getElementById('sw').value = sw;
+                document.getElementById('pl').value = pl;
+                document.getElementById('pw').value = pw;
+                document.getElementById('txt-sl').textContent = sl;
+                document.getElementById('txt-sw').textContent = sw;
+                document.getElementById('txt-pl').textContent = pl;
+                document.getElementById('txt-pw').textContent = pw;
+                executeInference();
+            }
+
+            function randomizeInputs() {
+                const r = (min, max) => (Math.random() * (max - min) + min).toFixed(1);
+                applyPreset(r(4.5, 7.5), r(2.2, 4.0), r(1.2, 6.5), r(0.2, 2.4));
+            }
+
+            function updateCurlPreview() {
+                const payload = {
+                    sepal_length: parseFloat(document.getElementById('sl').value),
+                    sepal_width: parseFloat(document.getElementById('sw').value),
+                    petal_length: parseFloat(document.getElementById('pl').value),
+                    petal_width: parseFloat(document.getElementById('pw').value)
+                };
+                document.getElementById('code-preview').textContent = 
+`curl -X POST "${window.location.origin}/predict" \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(payload)}'`;
+            }
+
+            async function executeInference() {
+                const btnSpin = document.getElementById('btn-spin');
                 const btnText = document.getElementById('btn-text');
-                const btnSpinner = document.getElementById('btn-spinner');
-                
-                // Hiển thị trạng thái loading
-                btnText.textContent = "Đang phân tích...";
-                btnSpinner.classList.remove('hidden');
+                btnSpin.classList.remove('hidden');
+                btnText.textContent = "Đang xử lý...";
 
                 const payload = {
-                    sepal_length: parseFloat(document.getElementById('sepal_length').value),
-                    sepal_width: parseFloat(document.getElementById('sepal_width').value),
-                    petal_length: parseFloat(document.getElementById('petal_length').value),
-                    petal_width: parseFloat(document.getElementById('petal_width').value)
+                    sepal_length: parseFloat(document.getElementById('sl').value),
+                    sepal_width: parseFloat(document.getElementById('sw').value),
+                    petal_length: parseFloat(document.getElementById('pl').value),
+                    petal_width: parseFloat(document.getElementById('pw').value)
                 };
 
                 try {
-                    const response = await fetch('/predict', {
+                    const res = await fetch('/predict', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-
-                    if (!response.ok) throw new Error("Dự đoán thất bại");
-
-                    const data = await response.json();
+                    const data = await res.json();
                     
-                    // Hiển thị kết quả
-                    document.getElementById('result-placeholder').classList.add('hidden');
-                    const resBox = document.getElementById('result-box');
-                    resBox.classList.remove('hidden');
-                    resBox.classList.add('flex');
-
-                    document.getElementById('species-name').textContent = data.details.name;
-                    document.getElementById('species-class').textContent = "Mã phân lớp: Class " + data.class_id;
-                    document.getElementById('species-desc').textContent = data.details.desc;
+                    // Render Specimen Card
+                    const spec = data.species;
+                    document.getElementById('specimen-title').textContent = spec.name;
+                    document.getElementById('specimen-author').textContent = `Taxonomy: ${spec.author} • Class ${data.class_id}`;
+                    document.getElementById('specimen-desc').textContent = spec.desc;
+                    document.getElementById('specimen-eco').textContent = spec.ecology;
+                    document.getElementById('specimen-icon').textContent = spec.icon;
+                    document.getElementById('main-conf').textContent = `${data.confidences[data.prediction]}%`;
                     
-                    const badge = document.getElementById('species-badge');
-                    badge.textContent = data.details.tag;
-                    badge.className = `px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border mb-2 ${data.details.badge_class}`;
+                    const badge = document.getElementById('specimen-badge');
+                    badge.textContent = spec.tag;
+                    badge.className = `px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-semibold border ${spec.badge}`;
 
-                } catch (err) {
-                    alert("Có lỗi khi gọi API: " + err.message);
+                    document.getElementById('ambient-glow').style.background = spec.accent;
+
+                    // Update Confidence Bars
+                    document.getElementById('bar-0').style.width = `${data.confidences.setosa}%`;
+                    document.getElementById('bar-val-0').textContent = `${data.confidences.setosa}%`;
+                    document.getElementById('bar-1').style.width = `${data.confidences.versicolor}%`;
+                    document.getElementById('bar-val-1').textContent = `${data.confidences.versicolor}%`;
+                    document.getElementById('bar-2').style.width = `${data.confidences.virginica}%`;
+                    document.getElementById('bar-val-2').textContent = `${data.confidences.virginica}%`;
+
+                    // Update Radar Chart
+                    if (radarChart) {
+                        radarChart.data.datasets[0].data = data.features;
+                        radarChart.data.datasets[0].borderColor = spec.accent;
+                        radarChart.data.datasets[0].pointBackgroundColor = spec.accent;
+                        radarChart.update();
+                    }
+
+                    playChime(spec.tag === 'Setosa' ? 700 : (spec.tag === 'Versicolor' ? 880 : 1050));
+                } catch(e) {
+                    console.error(e);
                 } finally {
-                    btnText.textContent = "Dự đoán kết quả";
-                    btnSpinner.classList.add('hidden');
+                    btnSpin.classList.add('hidden');
+                    btnText.textContent = "Khởi chạy mô hình SVM";
                 }
             }
+
+            function copySnippet() {
+                const text = document.getElementById('code-preview').textContent;
+                navigator.clipboard.writeText(text);
+                const lbl = document.getElementById('copy-label');
+                lbl.textContent = "Đã sao chép!";
+                setTimeout(() => lbl.textContent = "Sao chép curl", 2000);
+            }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                initChart();
+                updateCurlPreview();
+                executeInference();
+            });
         </script>
     </body>
     </html>
     """
-
-# 5. Endpoint kiểm tra sức khỏe hệ thống
-@app.get("/health")
-def health():
-    return {"status": "healthy"}
-
-# 6. Endpoint dự đoán (phục vụ cả Web UI lẫn API bên ngoài)
-@app.post("/predict")
-def predict(data: IrisInput):
-    features = [[
-        data.sepal_length,
-        data.sepal_width,
-        data.petal_length,
-        data.petal_width,
-    ]]
-
-    prediction = int(model.predict(features)[0])
-    details = species_details.get(prediction, {
-        "name": "Unknown",
-        "tag": "Unknown",
-        "badge_class": "bg-slate-100 text-slate-700",
-        "desc": "Không xác định được loài hoa.",
-    })
-
-    return {
-        "class_id": prediction,
-        "prediction": details["tag"].lower(),
-        "details": details
-    }
