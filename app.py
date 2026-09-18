@@ -20,7 +20,7 @@ else:
 app = FastAPI(
     title="Iris Cyber-Lab Classifier",
     description="Cyberpunk Botanical Quality Control Dashboard",
-    version="4.0.0",
+    version="4.1.0",
 )
 
 app.add_middleware(
@@ -143,10 +143,6 @@ def dashboard():
                 background-color: var(--c-bg); 
                 color: #e2e8f0; 
                 font-family: 'Chakra Petch', sans-serif; 
-                background-image: 
-                    linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
-                background-size: 30px 30px;
                 overflow-x: hidden;
             }
             .font-mono { font-family: 'JetBrains Mono', monospace; }
@@ -159,9 +155,10 @@ def dashboard():
             }
 
             .cyber-panel {
-                background: rgba(10, 14, 23, 0.85);
+                background: rgba(10, 14, 23, 0.75);
                 border: 1px solid rgba(0, 243, 255, 0.2);
-                backdrop-filter: blur(10px);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
                 box-shadow: 0 0 15px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 243, 255, 0.02);
             }
             
@@ -199,15 +196,29 @@ def dashboard():
         </style>
     </head>
     <body class="min-h-screen flex flex-col relative selection:bg-[#00f3ff] selection:text-black">
+        
+        <!-- NỀN ẢNH ĐỘNG (VIDEO LOOP) -->
+        <div class="fixed inset-0 z-[-2] w-full h-full overflow-hidden bg-black">
+            <!-- Video mạng lưới sinh học/dữ liệu phân tử -->
+            <video autoplay loop muted playsinline class="absolute min-w-full min-h-full object-cover opacity-60 mix-blend-screen">
+                <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-technology-connection-lines-loop-20079-large.mp4" type="video/mp4">
+            </video>
+        </div>
+
+        <!-- LỚP PHỦ MÀU TỐI & LƯỚI GRID ĐỂ BẢO VỆ MẮT VÀ HIỂN THỊ CHỮ RÕ RÀNG -->
+        <div class="fixed inset-0 z-[-1] bg-black/60 backdrop-blur-[3px]" 
+             style="background-image: linear-gradient(rgba(0, 243, 255, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 243, 255, 0.04) 1px, transparent 1px); background-size: 30px 30px;">
+        </div>
+
         <div class="scanlines"></div>
 
         <!-- TOP BAR -->
-        <header class="border-b border-[#00f3ff]/30 bg-[#000]/80 sticky top-0 z-50 shadow-[0_0_20px_rgba(0,243,255,0.1)]">
+        <header class="border-b border-[#00f3ff]/30 bg-[#000]/70 sticky top-0 z-50 shadow-[0_0_20px_rgba(0,243,255,0.1)] backdrop-blur-md">
             <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-[#00f3ff] rounded flex items-center justify-center text-black font-bold text-xl shadow-[0_0_15px_#00f3ff] animate-pulse">☣</div>
                     <div>
-                        <h1 class="font-bold text-xl tracking-widest text-white">SYS.<span class="glow-cyan">BOTANICA</span>_v4.0</h1>
+                        <h1 class="font-bold text-xl tracking-widest text-white">SYS.<span class="glow-cyan">BOTANICA</span>_v4.1</h1>
                         <p class="text-[10px] text-[#00f3ff]/70 font-mono tracking-widest uppercase">Biological Quality Control Terminal</p>
                     </div>
                 </div>
@@ -232,7 +243,6 @@ def dashboard():
                     </div>
 
                     <div class="space-y-6">
-                        <!-- SLIDERS -->
                         <div class="space-y-1">
                             <div class="flex justify-between text-[11px] font-mono text-gray-400"><span>Sepal Length [SL]</span><span id="txt-sl" class="text-white">5.1</span></div>
                             <input type="range" id="sl" min="4.0" max="8.0" step="0.1" value="5.1" oninput="syncVal('sl', 'txt-sl')">
@@ -287,7 +297,6 @@ def dashboard():
                                     <div class="absolute -inset-1 bg-gradient-to-r from-transparent to-transparent blur opacity-50 group-hover:opacity-100 transition duration-500" id="holo-glow"></div>
                                     <img id="specimen-img" src="" class="w-24 h-24 sm:w-28 sm:h-28 object-cover border-2 border-gray-700 relative z-10 grayscale-[30%] contrast-125">
                                     <div class="absolute inset-0 bg-[#00f3ff]/10 mix-blend-overlay z-20 pointer-events-none" id="holo-tint"></div>
-                                    <!-- Sci-fi brackets -->
                                     <div class="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white z-30"></div>
                                     <div class="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white z-30"></div>
                                 </div>
@@ -319,7 +328,6 @@ def dashboard():
                                     <span id="specimen-eco" class="text-xs text-gray-400 leading-relaxed font-mono"></span>
                                 </div>
                                 
-                                <!-- Probability Bars -->
                                 <div class="space-y-2 mt-4">
                                     <div class="relative pt-1">
                                         <div class="flex justify-between text-[9px] font-mono mb-1"><span class="text-[#00ff9d]">SETOSA</span><span id="bar-val-0">0%</span></div>
@@ -338,7 +346,6 @@ def dashboard():
                             
                             <!-- Radar -->
                             <div class="h-48 w-full relative flex justify-center items-center">
-                                <!-- Background crosshair -->
                                 <div class="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
                                     <div class="w-full h-px bg-white"></div><div class="h-full w-px bg-white absolute"></div>
                                 </div>
@@ -349,7 +356,6 @@ def dashboard():
                     </div>
                 </div>
 
-                <!-- Export Report Button -->
                 <div class="flex justify-end">
                     <button onclick="downloadPDF()" class="cyber-btn bg-white/5 border border-white/20 text-white hover:bg-white hover:text-black px-4 py-2 text-xs flex gap-2 items-center">
                         🖨️ EXPORT_REPORT.PDF
@@ -360,7 +366,7 @@ def dashboard():
             <!-- BOTTOM: DATABASE CORE & SYSTEM LOG -->
             <div class="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
                 
-                <!-- SPECIES CODEX (Phân tích loại hoa đã chọn) -->
+                <!-- SPECIES CODEX -->
                 <div class="cyber-panel p-5 col-span-1 border-t-2 border-t-[#00ff9d]">
                     <h2 class="text-sm font-bold glow-green tracking-wider mb-4 border-b border-[#00ff9d]/20 pb-2">>> SPECIES_CODEX (DATABASE)</h2>
                     <p class="text-[10px] font-mono text-gray-400 mb-3">Chọn mẫu chuẩn để nạp thông số và phân tích đặc trưng.</p>
@@ -404,7 +410,6 @@ def dashboard():
         </main>
 
         <script>
-            // Audio System
             let audioEnabled = true;
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             function playSound(type) {
@@ -428,7 +433,6 @@ def dashboard():
                 playSound('click');
             }
 
-            // Radar Chart Init
             let radarChart;
             function initChart() {
                 const ctx = document.getElementById('radarChart').getContext('2d');
@@ -445,7 +449,7 @@ def dashboard():
                                 pointBackgroundColor: '#00f3ff', borderWidth: 2, pointRadius: 2
                             },
                             {
-                                label: 'IDEAL_BASELINE', data: [5.8, 3.0, 3.7, 1.2], // AVG of all
+                                label: 'IDEAL_BASELINE', data: [5.8, 3.0, 3.7, 1.2],
                                 backgroundColor: 'transparent', borderColor: 'rgba(255, 255, 255, 0.1)',
                                 borderWidth: 1, borderDash: [2, 2], pointRadius: 0
                             }
@@ -466,26 +470,22 @@ def dashboard():
                 });
             }
 
-            // Sync Slider text
             function syncVal(sliderId, textId) {
                 const val = document.getElementById(sliderId).value;
                 document.getElementById(textId).textContent = val;
             }
 
-            // Randomize
             function randomizeInputs() {
                 playSound('click');
                 const r = (min, max) => (Math.random() * (max - min) + min).toFixed(1);
                 applyInputs(r(4.5, 7.5), r(2.2, 4.0), r(1.2, 6.5), r(0.2, 2.4));
             }
 
-            // Target Species Codex (Phân tích loại hoa được chọn)
             function loadSpeciesData(class_id) {
                 playSound('click');
-                // Average ideal specs for each class to simulate loading their profile
-                if(class_id === 0) applyInputs(5.0, 3.4, 1.5, 0.2); // Setosa
-                else if(class_id === 1) applyInputs(5.9, 2.8, 4.3, 1.3); // Versicolor
-                else applyInputs(6.6, 3.0, 5.5, 2.0); // Virginica
+                if(class_id === 0) applyInputs(5.0, 3.4, 1.5, 0.2); 
+                else if(class_id === 1) applyInputs(5.9, 2.8, 4.3, 1.3); 
+                else applyInputs(6.6, 3.0, 5.5, 2.0); 
             }
 
             function applyInputs(sl, sw, pl, pw) {
@@ -495,7 +495,6 @@ def dashboard():
                 executeInference();
             }
 
-            // Add to Sys Log
             function addToLog(sl, sw, pl, pw, pred, conf, color) {
                 const tbody = document.getElementById('log-body');
                 const time = new Date().toLocaleTimeString('en-US', {hour12:false});
@@ -510,7 +509,6 @@ def dashboard():
                 if(tbody.children.length > 50) tbody.removeChild(tbody.lastChild);
             }
 
-            // Main Inference Engine
             async function executeInference(isBatch = false) {
                 if(!isBatch) playSound('scan');
                 const btnSpin = document.getElementById('btn-spin');
@@ -545,7 +543,6 @@ def dashboard():
                 }
             }
 
-            // Update UI with Glitch/Cyber effects
             function updateUI(data, spec) {
                 const title = document.getElementById('specimen-title');
                 title.textContent = spec.name;
@@ -560,15 +557,13 @@ def dashboard():
                 mainConf.textContent = `${data.confidences[data.prediction.toLowerCase()]}%`;
                 mainConf.style.color = spec.accent;
                 
-                // Update Image
                 const imgEl = document.getElementById('specimen-img');
                 const currentImgPath = new URL(imgEl.src, window.location.origin).pathname;
                 if (currentImgPath !== spec.image) {
-                    imgEl.style.opacity = 0.2; // Sci-fi fade
+                    imgEl.style.opacity = 0.2; 
                     setTimeout(() => { imgEl.src = spec.image; imgEl.style.opacity = 1; }, 150);
                 }
                 
-                // Theme borders & Glows
                 document.getElementById('card-border').style.borderColor = spec.accent;
                 document.getElementById('card-border').style.boxShadow = `0 0 20px ${spec.accent}40`;
                 document.getElementById('holo-glow').style.background = `linear-gradient(45deg, transparent, ${spec.accent}, transparent)`;
@@ -579,12 +574,10 @@ def dashboard():
                 badge.textContent = `STATUS: IDENTIFIED [${spec.tag}]`;
                 badge.style.borderColor = spec.accent; badge.style.color = spec.accent;
 
-                // Bars
                 document.getElementById('bar-0').style.width = `${data.confidences.setosa}%`; document.getElementById('bar-val-0').textContent = `${data.confidences.setosa}%`;
                 document.getElementById('bar-1').style.width = `${data.confidences.versicolor}%`; document.getElementById('bar-val-1').textContent = `${data.confidences.versicolor}%`;
                 document.getElementById('bar-2').style.width = `${data.confidences.virginica}%`; document.getElementById('bar-val-2').textContent = `${data.confidences.virginica}%`;
 
-                // Radar
                 if (radarChart) {
                     radarChart.data.datasets[0].data = data.features;
                     radarChart.data.datasets[0].borderColor = spec.accent;
@@ -599,7 +592,6 @@ def dashboard():
                 }
             }
 
-            // CSV Batch Protocol
             function handleCSVUpload(event) {
                 playSound('click');
                 const file = event.target.files[0];
@@ -611,7 +603,6 @@ def dashboard():
                     const lines = text.split('\\n');
                     
                     let processed = 0;
-                    // Read line by line, skipping empty
                     for(let i=0; i<lines.length && processed < 100; i++) {
                         const cols = lines[i].split(',').map(s => s.trim());
                         if (cols.length >= 4) {
@@ -619,31 +610,26 @@ def dashboard():
                             const pl = parseFloat(cols[2]); const pw = parseFloat(cols[3]);
                             
                             if(!isNaN(sl) && !isNaN(sw) && !isNaN(pl) && !isNaN(pw)) {
-                                // Put into sliders and run inference without sound/UI refresh freeze
                                 document.getElementById('sl').value = sl; document.getElementById('sw').value = sw;
                                 document.getElementById('pl').value = pl; document.getElementById('pw').value = pw;
-                                await executeInference(true); // true = isBatch
+                                await executeInference(true);
                                 processed++;
-                                // Small delay for visual scanning effect
                                 await new Promise(r => setTimeout(r, 50)); 
                             }
                         }
                     }
                     playSound('success');
-                    // Sync the last one to UI
                     syncVal('sl', 'txt-sl'); syncVal('sw', 'txt-sw'); syncVal('pl', 'txt-pl'); syncVal('pw', 'txt-pw');
                     executeInference(); 
-                    event.target.value = ''; // reset file input
+                    event.target.value = ''; 
                 };
                 reader.readAsText(file);
             }
 
-            // PDF Generator
             function downloadPDF() {
                 playSound('click');
                 const element = document.getElementById('report-area');
                 
-                // Add a temporary solid background for PDF rendering
                 const originalBg = element.style.background;
                 element.style.background = '#000';
                 
@@ -662,7 +648,6 @@ def dashboard():
 
             window.addEventListener('DOMContentLoaded', () => {
                 initChart();
-                // Khởi động load mẫu Setosa mặc định
                 loadSpeciesData(0);
             });
         </script>
