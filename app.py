@@ -36,7 +36,7 @@ class IrisInput(BaseModel):
     petal_length: float
     petal_width: float
 
-# 2. Cập nhật Metadata với Ảnh thật của các loài hoa
+# 2. Cập nhật Metadata với Ảnh hoa Iris ổn định (Unsplash)
 SPECIES_METADATA = {
     0: {
         "name": "Iris Setosa",
@@ -47,7 +47,7 @@ SPECIES_METADATA = {
         "badge": "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
         "desc": "Đặc trưng bởi đài hoa rộng nhưng cánh hoa tiêu biến cực nhỏ. Loài hoa này có khả năng phân tách tuyến tính tuyệt đối.",
         "ecology": "Bắc bán cầu, khí hậu ôn đới lạnh, vùng đầm lầy ven biển.",
-        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Kosaciec_szczecinkowaty_Iris_setosa.jpg/320px-Kosaciec_szczecinkowaty_Iris_setosa.jpg"
+        "image": "https://images.unsplash.com/photo-1559564344-9333919e13d3?w=400&q=80"
     },
     1: {
         "name": "Iris Versicolor",
@@ -58,7 +58,7 @@ SPECIES_METADATA = {
         "badge": "bg-cyan-500/10 text-cyan-300 border-cyan-500/30",
         "desc": "Mang hình thái trung gian, có sự cân bằng lý tưởng giữa tỷ lệ chiều dài cánh hoa và đài hoa.",
         "ecology": "Khu vực ẩm ướt Bắc Mỹ, ven hồ và đồng cỏ ngập nước ngọt.",
-        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Iris_versicolor_3.jpg/320px-Iris_versicolor_3.jpg"
+        "image": "https://images.unsplash.com/photo-1622396481328-9b1b78cdd9fd?w=400&q=80"
     },
     2: {
         "name": "Iris Virginica",
@@ -69,7 +69,7 @@ SPECIES_METADATA = {
         "badge": "bg-purple-500/10 text-purple-300 border-purple-500/30",
         "desc": "Loài hoa có kích thước lớn và cấu trúc tráng lệ nhất với cánh hoa thuôn dài, sắc tím đậm đặc trưng.",
         "ecology": "Đồng cỏ ẩm ven biển và đầm lầy phía Đông Bắc Mỹ.",
-        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Iris_virginica.jpg/320px-Iris_virginica.jpg"
+        "image": "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=400&q=80"
     },
 }
 
@@ -286,11 +286,11 @@ def dashboard():
                     
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 pb-6 border-b border-white/10">
                         <div class="flex items-center gap-5">
-                            <!-- Ảnh thật của hoa -->
-                            <div class="relative shrink-0">
-                                <img id="specimen-img" src="" alt="Iris Image" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-2xl shadow-xl border-2 border-white/20 transition-all duration-500 bg-black/50">
-                                <div class="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10 pointer-events-none"></div>
-                            </div>
+<!-- Ảnh thật của hoa -->
+<div class="relative shrink-0">
+    <img id="specimen-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Iris Image" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-2xl shadow-xl border-2 border-white/20 transition-all duration-500 bg-black/50">
+    <div class="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10 pointer-events-none"></div>
+</div>
                             
                             <div>
                                 <span id="specimen-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-semibold border">SETOSA</span>
