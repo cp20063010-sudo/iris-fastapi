@@ -36,7 +36,7 @@ class IrisInput(BaseModel):
     petal_length: float
     petal_width: float
 
-# 2. Cập nhật Metadata với Ảnh hoa Iris ổn định (Unsplash)
+# 2. Cập nhật Metadata với Ảnh thật của các loài hoa
 SPECIES_METADATA = {
     0: {
         "name": "Iris Setosa",
@@ -47,8 +47,7 @@ SPECIES_METADATA = {
         "badge": "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
         "desc": "Đặc trưng bởi đài hoa rộng nhưng cánh hoa tiêu biến cực nhỏ. Loài hoa này có khả năng phân tách tuyến tính tuyệt đối.",
         "ecology": "Bắc bán cầu, khí hậu ôn đới lạnh, vùng đầm lầy ven biển.",
-        # Đã thay bằng link ảnh gốc của Wikipedia (rất ổn định)
-        "image": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Iris_setosa_1.jpg"
+        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Kosaciec_szczecinkowaty_Iris_setosa.jpg/320px-Kosaciec_szczecinkowaty_Iris_setosa.jpg"
     },
     1: {
         "name": "Iris Versicolor",
@@ -59,7 +58,7 @@ SPECIES_METADATA = {
         "badge": "bg-cyan-500/10 text-cyan-300 border-cyan-500/30",
         "desc": "Mang hình thái trung gian, có sự cân bằng lý tưởng giữa tỷ lệ chiều dài cánh hoa và đài hoa.",
         "ecology": "Khu vực ẩm ướt Bắc Mỹ, ven hồ và đồng cỏ ngập nước ngọt.",
-        "image": "https://images.unsplash.com/photo-1622396481328-9b1b78cdd9fd?w=400&q=80"
+        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Iris_versicolor_3.jpg/320px-Iris_versicolor_3.jpg"
     },
     2: {
         "name": "Iris Virginica",
@@ -70,7 +69,7 @@ SPECIES_METADATA = {
         "badge": "bg-purple-500/10 text-purple-300 border-purple-500/30",
         "desc": "Loài hoa có kích thước lớn và cấu trúc tráng lệ nhất với cánh hoa thuôn dài, sắc tím đậm đặc trưng.",
         "ecology": "Đồng cỏ ẩm ven biển và đầm lầy phía Đông Bắc Mỹ.",
-        "image": "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=400&q=80"
+        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Iris_virginica.jpg/320px-Iris_virginica.jpg"
     },
 }
 
@@ -176,17 +175,16 @@ def dashboard():
     </head>
     <body class="min-h-screen text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white relative">
 
-       <!-- ANIMATED NATURE VIDEO BACKGROUND -->
-        <div class="fixed inset-0 z-[-1] overflow-hidden bg-slate-950">
-            <!-- Video nền cảnh vật (Gió thổi cành cây) -->
-            <video autoplay loop muted playsinline class="absolute inset-0 w-full h-full object-cover opacity-50">
-                <!-- Đã thay bằng link CDN siêu ổn định từ Coverr -->
-                <source src="https://cdn.coverr.co/videos/coverr-trees-in-the-wind-8854/1080p.mp4" type="video/mp4">
-            </video>
+        <!-- ANIMATED NATURE BACKGROUND -->
+        <div class="fixed inset-0 z-[-1] overflow-hidden bg-slate-900">
+            <!-- Ảnh cảnh vật thiên nhiên (Unsplash) + Hiệu ứng Ken Burns -->
+            <div class="absolute inset-0 bg-cover bg-center bg-no-repeat animate-kenburns opacity-70" 
+                 style="background-image: url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2070&auto=format&fit=crop');">
+            </div>
             <!-- Lớp sương mù nhân tạo động -->
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/70 to-transparent animate-floatingfog pointer-events-none"></div>
-            <!-- Lớp phủ tối màu để nội dung text hiển thị rõ ràng -->
-            <div class="absolute inset-0 bg-slate-950/30 backdrop-blur-[1px] pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent animate-floatingfog"></div>
+            <!-- Lớp phủ bảo vệ màu sắc -->
+            <div class="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]"></div>
         </div>
 
         <!-- Top Navigation Bar -->
@@ -288,11 +286,11 @@ def dashboard():
                     
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 pb-6 border-b border-white/10">
                         <div class="flex items-center gap-5">
-<!-- Ảnh thật của hoa -->
-<div class="relative shrink-0">
-    <img id="specimen-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Iris Image" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-2xl shadow-xl border-2 border-white/20 transition-all duration-500 bg-black/50">
-    <div class="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10 pointer-events-none"></div>
-</div>
+                            <!-- Ảnh thật của hoa -->
+                            <div class="relative shrink-0">
+                                <img id="specimen-img" src="" alt="Iris Image" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-2xl shadow-xl border-2 border-white/20 transition-all duration-500 bg-black/50">
+                                <div class="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10 pointer-events-none"></div>
+                            </div>
                             
                             <div>
                                 <span id="specimen-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-semibold border">SETOSA</span>
