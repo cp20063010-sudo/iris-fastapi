@@ -35,7 +35,7 @@ app.add_middleware(
 @app.get("/img/{img_name}")
 def get_image(img_name: str):
     # Đã thêm "background.jpg" vào danh sách bên dưới
-    allowed_images = ["anh_setosa.jpg", "anh_versicolor.jpg", "anh_virginica.jpg", "background.jpg"]
+    allowed_images = ["anh_setosa.jpg", "anh_versicolor.jpg", "anh_virginica.jpg", "nen.jpg"]
     if img_name in allowed_images and os.path.exists(img_name):
         return FileResponse(img_name)
     raise HTTPException(status_code=404, detail="SYS_ERR: Image Not Found in Local Directory")
