@@ -47,7 +47,8 @@ SPECIES_METADATA = {
         "badge": "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
         "desc": "Đặc trưng bởi đài hoa rộng nhưng cánh hoa tiêu biến cực nhỏ. Loài hoa này có khả năng phân tách tuyến tính tuyệt đối.",
         "ecology": "Bắc bán cầu, khí hậu ôn đới lạnh, vùng đầm lầy ven biển.",
-        "image": "https://images.unsplash.com/photo-1559564344-9333919e13d3?w=400&q=80"
+        # Đã thay bằng link ảnh gốc của Wikipedia (rất ổn định)
+        "image": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Iris_setosa_1.jpg"
     },
     1: {
         "name": "Iris Versicolor",
@@ -175,16 +176,16 @@ def dashboard():
     </head>
     <body class="min-h-screen text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white relative">
 
-        <!-- ANIMATED NATURE BACKGROUND -->
-        <div class="fixed inset-0 z-[-1] overflow-hidden bg-slate-900">
-            <!-- Ảnh cảnh vật thiên nhiên (Unsplash) + Hiệu ứng Ken Burns -->
-            <div class="absolute inset-0 bg-cover bg-center bg-no-repeat animate-kenburns opacity-70" 
-                 style="background-image: url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2070&auto=format&fit=crop');">
-            </div>
+        <!-- ANIMATED NATURE VIDEO BACKGROUND -->
+        <div class="fixed inset-0 z-[-1] overflow-hidden bg-slate-950">
+            <!-- Video nền cảnh vật (Gió thổi cành cây) -->
+            <video autoplay loop muted playsinline class="absolute top-1/2 left-1/2 w-auto min-w-full min-h-full max-w-none -translate-x-1/2 -translate-y-1/2 opacity-60 object-cover">
+                <source src="https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1188-large.mp4" type="video/mp4">
+            </video>
             <!-- Lớp sương mù nhân tạo động -->
             <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent animate-floatingfog"></div>
-            <!-- Lớp phủ bảo vệ màu sắc -->
-            <div class="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]"></div>
+            <!-- Lớp phủ tối màu để nội dung text hiển thị rõ ràng -->
+            <div class="absolute inset-0 bg-slate-950/40 backdrop-blur-[1px]"></div>
         </div>
 
         <!-- Top Navigation Bar -->
