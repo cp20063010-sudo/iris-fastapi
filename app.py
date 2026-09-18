@@ -34,7 +34,8 @@ app.add_middleware(
 # API TRẢ VỀ ẢNH AN TOÀN
 @app.get("/img/{img_name}")
 def get_image(img_name: str):
-    allowed_images = ["anh_setosa.jpg", "anh_versicolor.jpg", "anh_virginica.jpg"]
+    # Đã thêm "background.jpg" vào danh sách bên dưới
+    allowed_images = ["anh_setosa.jpg", "anh_versicolor.jpg", "anh_virginica.jpg", "background.jpg"]
     if img_name in allowed_images and os.path.exists(img_name):
         return FileResponse(img_name)
     raise HTTPException(status_code=404, detail="SYS_ERR: Image Not Found in Local Directory")
@@ -197,12 +198,11 @@ def dashboard():
     </head>
     <body class="min-h-screen flex flex-col relative selection:bg-[#00f3ff] selection:text-black">
         
-        <!-- NỀN ẢNH ĐỘNG (VIDEO LOOP) -->
+        <!-- NỀN ẢNH CÁ NHÂN -->
         <div class="fixed inset-0 z-[-2] w-full h-full overflow-hidden bg-black">
-            <!-- Video mạng lưới sinh học/dữ liệu phân tử -->
-            <video autoplay loop muted playsinline class="absolute min-w-full min-h-full object-cover opacity-60 mix-blend-screen">
-                <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-technology-connection-lines-loop-20079-large.mp4" type="video/mp4">
-            </video>
+            <div class="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-screen" 
+                 style="nen-image: url('/img/nen.jpg');">
+            </div>
         </div>
 
         <!-- LỚP PHỦ MÀU TỐI & LƯỚI GRID ĐỂ BẢO VỆ MẮT VÀ HIỂN THỊ CHỮ RÕ RÀNG -->
