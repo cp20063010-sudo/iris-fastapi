@@ -176,16 +176,17 @@ def dashboard():
     </head>
     <body class="min-h-screen text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white relative">
 
-        <!-- ANIMATED NATURE VIDEO BACKGROUND -->
+       <!-- ANIMATED NATURE VIDEO BACKGROUND -->
         <div class="fixed inset-0 z-[-1] overflow-hidden bg-slate-950">
             <!-- Video nền cảnh vật (Gió thổi cành cây) -->
-            <video autoplay loop muted playsinline class="absolute top-1/2 left-1/2 w-auto min-w-full min-h-full max-w-none -translate-x-1/2 -translate-y-1/2 opacity-60 object-cover">
-                <source src="https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1188-large.mp4" type="video/mp4">
+            <video autoplay loop muted playsinline class="absolute inset-0 w-full h-full object-cover opacity-50">
+                <!-- Đã thay bằng link CDN siêu ổn định từ Coverr -->
+                <source src="https://cdn.coverr.co/videos/coverr-trees-in-the-wind-8854/1080p.mp4" type="video/mp4">
             </video>
             <!-- Lớp sương mù nhân tạo động -->
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent animate-floatingfog"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/70 to-transparent animate-floatingfog pointer-events-none"></div>
             <!-- Lớp phủ tối màu để nội dung text hiển thị rõ ràng -->
-            <div class="absolute inset-0 bg-slate-950/40 backdrop-blur-[1px]"></div>
+            <div class="absolute inset-0 bg-slate-950/30 backdrop-blur-[1px] pointer-events-none"></div>
         </div>
 
         <!-- Top Navigation Bar -->
